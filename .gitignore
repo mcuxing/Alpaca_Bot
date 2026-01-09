@@ -1,0 +1,21 @@
+# Sensitive credentials
+paper_account_api_key.txt
+.env
+
+# Logs and Data
+performance_log.csv
+*.log
+
+# Generated Images
+*.png
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+venv/
+env/
+
+# System files
+.DS_Store

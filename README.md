@@ -1,107 +1,84 @@
-# Alpaca Local 量化交易平台 (基于 Trae)
+# Alpaca Local 量化交易平台 (Powered by Trae)
 
-这是一个基于 Trae IDE 和 Alpaca API 搭建的本地量化交易环境。它支持策略开发、历史回测以及模拟盘/实盘自动交易。
-
-## 1. 快速上手 (Quick Start)
-
-### 1.1 环境准备
-1. **Python 环境**: 确保 macOS 已安装 Python 3.9+。
-2. **依赖安装**:
-   在 Trae 终端中运行以下命令安装所需库：
-   ```bash
-   pip3 install -r requirements.txt
-   ```
-3. **API 配置**:
-   确保项目根目录下有 `paper_account_api_key.txt` 文件，格式如下：
-   ```text
-   Endpoint：https://paper-api.alpaca.markets/v2
-   API Key ID：<YOUR_API_KEY>
-   Secret Key：<YOUR_SECRET_KEY>
-   ```
-
-### 1.2 核心文件说明
-- **[strategy.py](strategy.py)**: **策略逻辑核心**。在这里编写你的买卖信号逻辑。
-- **[backtest.py](backtest.py)**: **回测工具**。拉取历史数据并跑策略，生成收益曲线图。
-- **[main.py](main.py)**: **实盘/模拟盘执行脚本**。连接 Alpaca 账户，根据策略信号自动下单。
-- **[utils.py](utils.py)**: 辅助工具，用于读取配置文件。
+这是一个基于 Trae IDE 和 Alpaca API 搭建的全栈量化交易解决方案。它打通了从**本地策略开发** -> **历史数据回测** -> **云端自动实盘**的完整闭环。
 
 ---
 
-## 2. 如何使用 Trae 进行量化开发与迭代
+## 🛠️ 第一阶段：策略开发 (Trae 本地环境)
 
-Trae 的 AI 编程能力非常适合量化策略的快速迭代。推荐的工作流如下：
+在这里，你利用 Trae 的 AI 能力快速编写和迭代交易逻辑。
 
-### 第一步：编写/修改策略 (Strategy)
-打开 `strategy.py`，这是你唯一需要频繁修改的文件。
-目前的示例是一个简单的 **双均线策略 (SMA Crossover)**。
+### 1.1 核心文件
+- **`strategy.py`**: **策略大脑**。所有的买卖逻辑都写在这里。
+    - 当前默认策略：**布林带 (Bollinger Bands) + RSI 组合策略**。
+    - 动态仓位：根据波动率自动调整每次下单的股数。
+- **`paper_account_api_key.txt`**: 你的 Alpaca API 密钥（**严禁上传**）。
 
-**如何迭代：**
-你可以直接告诉 Trae（在右侧 Chat 窗口）：
-> "请帮我修改 strategy.py，把策略改为 RSI 超买超卖策略，当 RSI > 70 卖出，RSI < 30 买入。"
+### 1.2 如何开发新策略
+不需要手动写复杂的数学公式，直接在 Trae 的 Chat 窗口输入：
+> "帮我修改 strategy.py，加入 MACD 指标作为过滤条件。"
+> "帮我修改仓位管理逻辑，亏损超过 5% 强制止损。"
 
-Trae 会自动帮你重写 `generate_signals` 函数。
-
-### 第二步：进行回测 (Backtest)
-策略修改完成后，需要验证其历史表现。
-1. 打开终端（Terminal）。
-2. 运行回测脚本：
-   ```bash
-   python3 backtest.py
-   ```
-3. **查看结果**：
-   - 终端会输出 **策略总收益率** 和 **买入持有收益率**。
-   - 脚本会生成一张 `backtest_result.png` 图片，直接在左侧文件列表中点击打开即可查看资金曲线对比图。
-
-### 第三步：模拟盘交易 (Paper Trading)
-回测满意后，可以进行模拟盘实战。
-1. 确保你的 Alpaca Paper Account 有资金（如余额为0，请去官网 Dashboard 点击 Reset/Add Funds）。
-2. 运行交易机器人：
-   ```bash
-   python3 main.py
-   ```
-3. **执行逻辑**：
-   - 脚本会自动获取最新数据。
-   - 调用 `strategy.py` 计算当前信号。
-   - 检查当前持仓，如果信号变化（例如从空仓变多仓），会自动下单买入。
+Trae 会自动帮你重写 `strategy.py` 中的代码。
 
 ---
 
-## 3. 常见问题 (FAQ)
+## 📊 第二阶段：本地回测 (Backtesting)
 
-### Q: 如何发布策略？
-**A**: 在本地环境中，"发布"意味着将 `main.py` 设置为定时运行。
-- **初级方案**: 手动每天运行一次 `python3 main.py`。
-- **进阶方案**: 使用 macOS 的 `crontab` 设置定时任务（例如每个交易日早上 9:35 运行）。
-- **云端方案**: 将整个项目上传到云服务器（AWS/GCP），使用 Docker 或 Supervisor 守护进程运行。
+在投入真金白银（或模拟资金）之前，必须验证策略的历史表现。
 
-### Q: 为什么回测结果很好，实盘却亏损？
-**A**: 回测通常存在"过度拟合"风险，且未完全考虑滑点(Slippage)和市场冲击。建议在 Paper Trading 模拟盘多跑一段时间验证。
+### 2.1 运行回测
+在 Trae 终端中运行：
+```bash
+python3 backtest.py
+```
 
-### Q: 报错 "insufficient buying power"？
-**A**: 模拟盘账户没钱了。请登录 Alpaca 官网重置模拟盘资金。
+### 2.2 查看结果
+脚本运行结束后：
+1. **终端输出**: 显示总收益率、买入持有收益率、最终资金额。
+2. **可视化图表**: 左侧文件列表会自动生成 **`backtest_result.png`**。点击打开，即可看到策略资金曲线 vs 股价走势的对比图。
 
-### Q: 报错 SSL 相关警告？
-**A**: macOS 下 Python 的 SSL 库版本问题，代码中已做屏蔽处理，不影响交易功能。
+---
 
-## 4. 实盘追踪与自动化 (Live Trading & Tracking)
+## ☁️ 第三阶段：云端实盘验证 (Cloud Deployment)
 
-### 4.1 自动执行
-为了在模拟盘持续跑 1-2 个月，你需要让脚本每天自动运行。
-我们提供了 `scheduler.py`，它会在每个交易日的 **09:35 AM (美东时间)** 自动运行一次交易机器人。
+为了验证策略的稳定性，建议在 AWS 等云服务器上进行 1-2 个月的模拟盘跑测。
 
-**使用方法**:
-1. 打开终端。
-2. 运行调度器（建议使用 `nohup` 或在单独的终端窗口运行）：
-   ```bash
-   python3 scheduler.py
-   ```
-3. 保持该终端开启，或者将其部署到云服务器上。
+### 3.1 首次部署 (AWS)
+请详细阅读 **[DEPLOYMENT.md](DEPLOYMENT.md)** 文档，它包含了从购买服务器到配置环境的保姆级教程。
 
-### 4.2 收益追踪
-每次 `main.py` 运行时，都会自动将当前的账户净值、持仓等信息记录到 **`performance_log.csv`** 文件中。
+### 3.2 日常运维与更新
+我们实现了一套**自动化发布流程**，无需手动登录服务器改代码。
 
-要查看可视化的收益曲线：
+**场景：你在本地 Trae 修改并回测好了新策略，想更新到云端。**
+
+1.  **本地发布 (Trae 端)**:
+    ```bash
+    ./local_publish.sh
+    ```
+    *功能：自动将代码提交并推送到 GitHub。*
+
+2.  **云端更新 (AWS 端)**:
+    登录 AWS 网页终端 (Instance Connect) 或使用 SSH，运行：
+    ```bash
+    ./remote_update.sh
+    ```
+    *功能：自动拉取最新代码，并重启后台交易机器人。*
+
+### 3.3 收益追踪
+机器人每天会在美东时间 09:35 自动运行，并将结果记录在服务器的 `performance_log.csv` 中。
+
+**如何查看实盘曲线？**
+你可以随时在服务器上运行：
 ```bash
 python3 track_performance.py
 ```
-这会生成一张 **`live_performance.png`** 图片，展示你的实盘资金增长情况。
+它会生成 `live_performance.png`，你可以下载下来查看最新的实盘资金曲线。
+
+---
+
+## ⚠️ 注意事项
+
+1.  **PDT 规则**: 如果你的账户资金小于 $25,000，频繁进行日内交易（Day Trade）可能会被限制。本策略包含基本的 PDT 保护逻辑，但建议保持资金充足。
+2.  **数据延迟**: 免费的 Alpaca 账户使用的是 IEX 数据源，部分请求可能有 15 分钟延迟。实盘建议升级到 Alpaca Unlimited 数据订阅。
+3.  **密钥安全**: 永远不要将 `paper_account_api_key.txt` 上传到 GitHub。我们的 `.gitignore` 已经为你做好了防护。

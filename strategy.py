@@ -64,7 +64,9 @@ class BollingerRSIStrategy(BaseStrategy):
         df['rsi'] = self._calculate_rsi(df['close'], self.rsi_window)
         
         # Volatility (for position sizing later)
+        # We need to calculate this on df first, then copy to signals
         df['volatility'] = df['close'].pct_change().rolling(window=self.bb_window).std()
+        signals['volatility'] = df['volatility']
 
         # --- 2. Generate Signals ---
         

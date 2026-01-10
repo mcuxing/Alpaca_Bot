@@ -75,6 +75,34 @@ python3 track_performance.py
 ```
 它会生成 `live_performance.png`，你可以下载下来查看最新的实盘资金曲线。
 
+### 3.4 后台运行原理与监控
+
+**执行完 `./remote_update.sh` 后，机器人就已经在后台自动运行了，不需要再手动运行 `scheduler.py`。**
+
+#### 🔎 原理说明
+1.  **Systemd 服务**: 我们配置了一个名为 `alpaca-bot.service` 的后台服务。它负责自动运行 `scheduler.py`，并在程序崩溃或服务器重启时自动拉起。
+2.  **更新脚本的作用**: `remote_update.sh` 拉取最新代码后，执行 `sudo systemctl restart alpaca-bot` 重启服务，使新代码生效。
+3.  **结果**: 服务重启后，新的策略代码已经在后台运行，等待每天美东时间 09:35 触发。
+
+#### ✅ 如何验证运行状态？
+在 AWS 终端输入：
+```bash
+sudo systemctl status alpaca-bot
+```
+- 如果看到绿色的 `active (running)`，说明服务正常。
+- 你可以随时关闭 AWS 终端窗口，不影响运行。
+
+#### 📜 如何查看日志？
+由于在后台运行，屏幕上无输出。查看日志方法：
+
+```bash
+# 查看最近 50 行日志
+journalctl -u alpaca-bot -n 50 --no-pager
+
+# 实时滚动查看日志 (按 Ctrl+C 退出)
+journalctl -u alpaca-bot -f
+```
+
 ---
 
 ## ⚠️ 注意事项
@@ -82,3 +110,4 @@ python3 track_performance.py
 1.  **PDT 规则**: 如果你的账户资金小于 $25,000，频繁进行日内交易（Day Trade）可能会被限制。本策略包含基本的 PDT 保护逻辑，但建议保持资金充足。
 2.  **数据延迟**: 免费的 Alpaca 账户使用的是 IEX 数据源，部分请求可能有 15 分钟延迟。实盘建议升级到 Alpaca Unlimited 数据订阅。
 3.  **密钥安全**: 永远不要将 `paper_account_api_key.txt` 上传到 GitHub。我们的 `.gitignore` 已经为你做好了防护。
+
